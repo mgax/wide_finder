@@ -1,7 +1,5 @@
-import sys
-from optparse import OptionParser
-
 from logic import LogCounter
+from utils import parse_argv
 
 def parse_file(data_file):
     counter = LogCounter()
@@ -10,11 +8,9 @@ def parse_file(data_file):
     return counter
 
 if __name__ == '__main__':
-    parser = OptionParser()
-    parser.add_option("-q", "--quiet", dest="quiet", action="store_true", default=False)
-    (options, args) = parser.parse_args()
+    args = parse_argv()
     
-    counter = parse_file(args[0])
+    counter = parse_file(args['filename'])
     
-    if not options.quiet:
+    if args['output']:
         counter.report()
