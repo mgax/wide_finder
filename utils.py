@@ -38,6 +38,7 @@ def parse_argv():
 
 class Stats:
     def __init__(self, log_file, log_each_job=False):
+        self.begin_time = time.clock()
         self.wait_time = 0
         self.join_result_time = 0
         self.total_jobs_time = 0
@@ -46,11 +47,10 @@ class Stats:
         self.report_time = 0
         self.log_each_job = log_each_job
     
-    def initial_report(self, file_name, file_size, chunks):
-        self.n_jobs = chunks
-        self.begin_time = time.clock()
-        self._output("[master process] (%d) starting %s (%.1f MB: %d chunks of %.1f MB each)" %
-                (os.getpid(), file_name, file_size / 2**20, chunks, float(file_size) / chunks / 2**20))
+    def initial_report(self, file_name, file_size, n_chunks, n_threads):
+        self.n_jobs = n_chunks
+        self._output("[master process] (%d) starting %s (%.1f MB: %d chunks of %.1f MB each, %d threads)" %
+                (os.getpid(), file_name, file_size / 2**20, n_chunks, float(file_size) / n_chunks / 2**20, n_threads))
     
     def waiting(self):
         now_time = time.clock()
@@ -69,8 +69,8 @@ class Stats:
         self.total_jobs_time += job_time
     
     def report_master_stats(self):
-        self._output("[master process] (%d) done. total time: %.3f; avg job time: %.3f" %
-                (os.getpid(), time.clock() - self.begin_time, self.total_jobs_time / self.n_jobs))
+        self._output("[master process] (%d) done. process time: %.3f; avg job time: %.3f" %
+                (os.getpid(), time.clock() - self.begin_time + self.total_jobs_time, self.total_jobs_time / self.n_jobs))
         self._output("[master process] idle time: %.3f; join time: %.3f; report time: %.3f" %
                 (self.wait_time, self.join_result_time, self.report_time))
     

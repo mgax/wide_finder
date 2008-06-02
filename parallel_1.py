@@ -19,7 +19,7 @@ def parse_chunk(file_name, start, end):
 def parse_file(file_name, cores, jobs_per_core, stats):
     file_size = os.path.getsize(file_name)
     chunks = int(cores * jobs_per_core)
-    stats.initial_report(file_name, file_size, chunks)
+    stats.initial_report(file_name, file_size, chunks, cores)
     
     queue = pprocess.Queue(limit=cores)
     parse_chunk_async = queue.manage(pprocess.MakeParallel(parse_chunk))
