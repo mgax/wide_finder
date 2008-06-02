@@ -10,7 +10,7 @@ def parse_file(data_file):
 if __name__ == '__main__':
     args = parse_argv()
     
-    counter = parse_file(args['filename'])
+    counter = parse_file(args.filename)
     
-    if args['output']:
+    if not args.quiet:
         counter.report()

@@ -26,10 +26,20 @@ def report_job_time(start, end, time):
 
 def parse_argv():
     parser = OptionParser()
-    parser.add_option("-q", "--quiet", dest="quiet", action="store_true", default=False)
+    parser.add_option("-q", "--quiet", dest="quiet", action='store_true', default=False)
+    parser.add_option("-c", "--cores", dest="cores", type='int', default=1)
+    parser.add_option("-j", "--jobs-per-core", type='float', dest='jobs_per_core', default=1.)
+    parser.add_option("-l", "--log-file", dest='log_file', default=None)
     (options, args) = parser.parse_args()
     
-    return {
-        'filename': args[0],
-        'output': not options.quiet,
-    }
+    options.filename = args[0]
+    
+    return options
+
+def log_message(file_name, message):
+    if file_name == '-':
+        print message
+    else:
+        f = open(file_name, 'a')
+        f.write(message + "\n")
+        f.close()
