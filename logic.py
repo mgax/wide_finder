@@ -9,8 +9,9 @@ def _add(the_dict, key, value=1):
     else:
         the_dict[key] = value
 
-def _report(label, the_dict, shrink=False):
-    print "Top %s:" % label
+def _report(quiet, label, the_dict, shrink=False):
+    if not quiet:
+        print "Top %s:" % label
     
     if shrink:
         format = ' %9.1fM: %s'
@@ -26,12 +27,15 @@ def _report(label, the_dict, shrink=False):
             try:
                 value /= float(2 ** 20)
             except:
-                print value
-                print type(value)
+                if not quiet:
+                    print value
+                    print type(value)
                 raise
-        print format % (value, key)
+        if not quiet:
+            print format % (value, key)
     
-    print
+    if not quiet:
+        print
 
 class LogCounter:
     def __init__(self):
@@ -70,9 +74,9 @@ class LogCounter:
     def _get_counts_as_tuple(self):
         return (self.stats_hits, self.stats_bytes, self.stats_404s, self.stats_clients, self.stats_referrals)
     
-    def report(self):
-        _report('URIs by hit', self.stats_hits)
-        _report('URIs by bytes', self.stats_bytes, True)
-        _report('404s', self.stats_404s)
-        _report('client addresses', self.stats_clients)
-        _report('referrers', self.stats_referrals)
+    def report(self, quiet=False):
+        _report(quiet, 'URIs by hit', self.stats_hits)
+        _report(quiet, 'URIs by bytes', self.stats_bytes, True)
+        _report(quiet, '404s', self.stats_404s)
+        _report(quiet, 'client addresses', self.stats_clients)
+        _report(quiet, 'referrers', self.stats_referrals)

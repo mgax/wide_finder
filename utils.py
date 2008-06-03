@@ -29,7 +29,7 @@ def parse_argv():
     parser.add_option("-c", "--cores", dest="cores", type='int', default=1)
     parser.add_option("-j", "--jobs-per-core", type='float', dest='jobs_per_core', default=1.)
     parser.add_option("-l", "--log-file", dest='log_file', default=None)
-    parser.add_option("--log-each-job", dest='log_each_job', action='store_true', default=False)
+    parser.add_option("-e", "--log-each-job", dest='log_each_job', action='store_true', default=False)
     (options, args) = parser.parse_args()
     
     options.filename = args[0]
@@ -38,7 +38,7 @@ def parse_argv():
 
 class Stats:
     def __init__(self, log_file, log_each_job=False):
-        self.begin_time = time.clock()
+        self.begin_time = time.time()
         self.wait_time = 0
         self.join_result_time = 0
         self.total_jobs_time = 0
@@ -53,14 +53,14 @@ class Stats:
                 (os.getpid(), file_name, file_size / 2**20, n_chunks, float(file_size) / n_chunks / 2**20, n_threads))
     
     def waiting(self):
-        now_time = time.clock()
+        now_time = time.time()
         if self.prev_time:
-            self.wait_time += now_time - self.prev_time
+            self.join_result_time += now_time - self.prev_time
         self.prev_time = now_time
     
     def received_job_result(self):
-        now_time = time.clock()
-        self.join_result_time += now_time - self.prev_time
+        now_time = time.time()
+        self.wait_time += now_time - self.prev_time
         self.prev_time = now_time
     
     def job_report(self, job_pid, job_time):
@@ -69,16 +69,17 @@ class Stats:
         self.total_jobs_time += job_time
     
     def report_master_stats(self):
-        self._output("[master process] (%d) done. process time: %.3f; avg job time: %.3f" %
-                (os.getpid(), time.clock() - self.begin_time + self.total_jobs_time, self.total_jobs_time / self.n_jobs))
+        self._output("[master process] (%d) done. process time: %.3f; all jobs time: %.3f; avg job time: %.3f" %
+                (os.getpid(), time.time() - self.begin_time, self.total_jobs_time, self.total_jobs_time / self.n_jobs))
         self._output("[master process] idle time: %.3f; join time: %.3f; report time: %.3f" %
                 (self.wait_time, self.join_result_time, self.report_time))
+        self._output("")
     
     def begin_report(self):
-        self.report_start = time.clock()
+        self.report_start = time.time()
     
     def done_report(self):
-        self.report_time = time.clock() - self.report_start
+        self.report_time = time.time() - self.report_start
     
     def _output(self, message):
         if not self.log_file:

@@ -9,7 +9,7 @@ from logic import LogCounter
 from utils import seek_open, file_offsets, parse_argv, Stats
 
 def parse_chunk(file_name, temp_dir, start, end):
-    start_time = time.clock()
+    start_time = time.time()
     
     f = seek_open(file_name, start, end)
     
@@ -19,7 +19,7 @@ def parse_chunk(file_name, temp_dir, start, end):
     
     out_file_name = "%s/%d" % (temp_dir, start)
     pickle.dump(counter, open(out_file_name, 'wb'))
-    return (out_file_name, os.getpid(), time.clock() - start_time)
+    return (out_file_name, os.getpid(), time.time() - start_time)
 
 def parse_file(file_name, cores, jobs_per_core, stats):
     file_size = os.path.getsize(file_name)
@@ -59,8 +59,7 @@ if __name__ == '__main__':
     counter = parse_file(args.filename, args.cores, args.jobs_per_core, stats)
     
     stats.begin_report()
-    if not args.quiet:
-        counter.report()
-    
+    counter.report(args.quiet)
     stats.done_report()
+    
     stats.report_master_stats()
