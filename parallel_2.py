@@ -39,12 +39,13 @@ def parse_file(file_name, cores, jobs_per_core, stats):
         stats.waiting()
         for (file_name, job_pid, job_time) in queue:
             stats.received_job_result()
-            stats.job_report(job_pid, job_time)
+            start_reduce_time = time.time()
             
             if file_name:
                 total.add_counter(pickle.load(open(file_name, 'rb')))
                 os.remove(file_name)
             
+            stats.job_report(job_pid, job_time, time.time() - start_reduce_time)
             stats.waiting()
     
     finally:

@@ -40,7 +40,7 @@ class Stats:
     def __init__(self, log_file, log_each_job=False):
         self.begin_time = time.time()
         self.wait_time = 0
-        self.join_result_time = 0
+        self.reduce_result_time = 0
         self.total_jobs_time = 0
         self.prev_time = None
         self.log_file = log_file
@@ -55,7 +55,7 @@ class Stats:
     def waiting(self):
         now_time = time.time()
         if self.prev_time:
-            self.join_result_time += now_time - self.prev_time
+            self.reduce_result_time += now_time - self.prev_time
         self.prev_time = now_time
     
     def received_job_result(self):
@@ -63,16 +63,16 @@ class Stats:
         self.wait_time += now_time - self.prev_time
         self.prev_time = now_time
     
-    def job_report(self, job_pid, job_time):
+    def job_report(self, job_pid, job_time, reduce_time):
         if self.log_each_job:
-            self._output("[job %d] %.3f" % (job_pid, job_time))
+            self._output("[job %d] %.3f; reduced in %.3f" % (job_pid, job_time, reduce_time))
         self.total_jobs_time += job_time
     
     def report_master_stats(self):
         self._output("[master process] (%d) done. process time: %.3f; all jobs time: %.3f; avg job time: %.3f" %
                 (os.getpid(), time.time() - self.begin_time, self.total_jobs_time, self.total_jobs_time / self.n_jobs))
-        self._output("[master process] idle time: %.3f; join time: %.3f; report time: %.3f" %
-                (self.wait_time, self.join_result_time, self.report_time))
+        self._output("[master process] idle time: %.3f; reduce time: %.3f; report time: %.3f" %
+                (self.wait_time, self.reduce_result_time, self.report_time))
         self._output("")
     
     def begin_report(self):

@@ -1,6 +1,6 @@
 import re
 
-_line_matcher = re.compile(r'^' + r'([^\s]+)\s+' * 11)
+_line_matcher = re.compile(r'^' + r'(\S+)\s+' * 11)
 _blog_matcher = re.compile(r'^/ongoing/When/\d\d\dx/\d\d\d\d/\d\d/\d\d/[^ .]+$')
 
 def _add(the_dict, key, value=1):
