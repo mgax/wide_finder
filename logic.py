@@ -1,82 +1,80 @@
 import re
 
-_line_matcher = re.compile(r'^' + r'(\S+)\s+' * 11)
 _blog_matcher = re.compile(r'^/ongoing/When/\d\d\dx/\d\d\d\d/\d\d/\d\d/[^ .]+$')
 
-def _add(the_dict, key, value=1):
-    if key in the_dict:
-        the_dict[key] += value
-    else:
-        the_dict[key] = value
-
-def _report(quiet, label, the_dict, shrink=False):
-    if not quiet:
-        print "Top %s:" % label
-    
-    if shrink:
-        format = ' %9.1fM: %s'
-    else:
-        format = ' %10d: %s'
-    
-    top = [ (value, key) for key, value in the_dict.iteritems() ]
-    top.sort()
-    top.reverse()
-    
-    for (value, key) in top[:10]:
-        if shrink:
-            try:
-                value /= float(2 ** 20)
-            except:
-                if not quiet:
-                    print value
-                    print type(value)
-                raise
-        if not quiet:
-            print format % (value, key)
-    
-    if not quiet:
-        print
-
 class LogCounter:
+    def __init__(self, name):
+        self.name = name
+        self.data = {}
+    
+    def add(self, key, value=1):
+        if key in self.data:
+            self.data[key] += value
+        else:
+            self.data[key] = value
+    
+    def _top_10(self):
+        top = []
+        bar = 0
+        for (key, value) in self.data.iteritems():
+            if value > bar:
+                top.append((value, key))
+                if len(top) > 10:
+                    top.sort(reverse=True)
+                    top.pop()
+                    bar = top[-1][0]
+        return top
+    
+    def report(self):
+        out = "Top %s:\n" % self.name
+        
+        if self.name == 'URIs by bytes':
+            format = ' %9.1fM: %s'
+        else:
+            format = ' %10d: %s'
+        
+        for (value, key) in self._top_10():
+            if self.name == 'URIs by bytes':
+                value /= float(2 ** 20)
+            out += format % (value, key) + "\n"
+        
+        return out
+    
+    def add_counter(self, other):
+        for key, value in other.data.iteritems():
+            self.add(key, value)
+
+count_names = ['URIs by hit', 'URIs by bytes', '404s', 'client addresses', 'referrers']
+
+class LogMapper:
     def __init__(self):
-        self.stats_hits = {}
-        self.stats_bytes = {}
-        self.stats_404s = {}
-        self.stats_clients = {}
-        self.stats_referrals = {}
+        self.hits = LogCounter(count_names[0])
+        self.bytes = LogCounter(count_names[1])
+        self.n404s = LogCounter(count_names[2])
+        self.clients = LogCounter(count_names[3])
+        self.referrals = LogCounter(count_names[4])
     
     def parse_line(self, line):
-        (client, method, url, status, bytes, referral) = _line_matcher.match(line).group(1, 6, 7, 9, 10, 11)
+        ls = line.split(' ')
+        (client, method, url, status, bytes, referral) = (ls[0], ls[5], ls[6], ls[8], ls[9], ls[10])
         
         if method != '"GET':
             return
         
         if status == '404':
-            _add(self.stats_404s, url)
+            self.n404s.add(url)
         else:
             if status not in ('200', '304'):
                 return
             
             if status == '200':
-                _add(self.stats_bytes, url, int(bytes))
+                self.bytes.add(url, int(bytes))
             
-            if _blog_matcher.match(url):
-                _add(self.stats_hits, url)
-                _add(self.stats_clients, client)
+            if url.startswith('/ongoing/When/') and _blog_matcher.match(url):
+                self.hits.add(url)
+                self.clients.add(client)
                 if not (referral == '"-"' or referral.startswith('"http://www.tbray.org/ongoing/')):
-                    _add(self.stats_referrals, referral[1:-1])
+                    self.referrals.add(referral[1:-1])
     
-    def add_counter(self, other):
-        for (s, o) in map(lambda p, f: (p, f), self._get_counts_as_tuple(), other._get_counts_as_tuple()):
-            for key, value in o.iteritems():
-                _add(s, key, value)
-    
-    def _get_counts_as_tuple(self):
-        return (self.stats_hits, self.stats_bytes, self.stats_404s, self.stats_clients, self.stats_referrals)
-    
-    def report(self, quiet=False):
-        _report(quiet, 'URIs by hit', self.stats_hits)
-        _report(quiet, 'URIs by bytes', self.stats_bytes, True)
-        _report(quiet, '404s', self.stats_404s)
-        _report(quiet, 'client addresses', self.stats_clients)
-        _report(quiet, 'referrers', self.stats_referrals)
+    def get_counters(self):
+        return dict((count.name, count) for count in (self.hits, self.bytes, self.n404s, self.clients, self.referrals))

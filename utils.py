@@ -1,5 +1,6 @@
 import time
 import os
+import pickle
 from optparse import OptionParser
 
 def seek_open(file_name, start=0, end=-1):
@@ -22,6 +23,11 @@ def file_offsets(file_size, chunks):
     offsets = list([int(file_size/chunks * n) for n in range(chunks)])
     offsets.append(file_size)
     return map(lambda s, e: (s, e), offsets[:-1], offsets[1:])
+
+def pickle_to_file(data, file_name):
+    pickle.dump(data, open(file_name, 'wb'))
+    print file_name
+    return file_name
 
 def parse_argv():
     parser = OptionParser()
