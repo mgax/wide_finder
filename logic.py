@@ -68,7 +68,10 @@ class LogMapper:
                 return
             
             if status == '200':
-                self.bytes.add(url, int(bytes))
+                try:
+                    self.bytes.add(url, int(bytes))
+                except ValueError:
+                    pass
             
             if url.startswith('/ongoing/When/') and _blog_matcher.match(url):
                 self.hits.add(url)

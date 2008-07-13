@@ -26,7 +26,6 @@ def file_offsets(file_size, chunks):
 
 def pickle_to_file(data, file_name):
     pickle.dump(data, open(file_name, 'wb'))
-    print file_name
     return file_name
 
 def parse_argv():
