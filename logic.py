@@ -43,6 +43,7 @@ class LogCounter:
     def add_counter(self, other):
         for key, value in other.data.iteritems():
             self.add(key, value)
+        return self
 
 count_names = ['URIs by hit', 'URIs by bytes', '404s', 'client addresses', 'referrers']
 
